@@ -66,3 +66,14 @@ def test_supabase_environment_overrides_dotenv(monkeypatch, tmp_path):
     monkeypatch.setenv("SUPABASE_SERVICE_KEY", "")
     settings = load_settings()
     assert settings.supabase_url is None and settings.supabase_service_key is None
+
+
+def test_actions_environment_needs_no_dotenv(monkeypatch, tmp_path):
+    assert not (tmp_path / ".env").exists()
+    monkeypatch.setenv("BASE_RPC_URL", "https://rpc.example.test")
+    monkeypatch.setenv("SUPABASE_URL", "https://project.example.test")
+    monkeypatch.setenv("SUPABASE_SERVICE_KEY", "synthetic-service-key")
+    settings = load_settings()
+    assert settings.base_rpc_url == "https://rpc.example.test"
+    assert settings.supabase_url == "https://project.example.test"
+    assert settings.supabase_service_key == "synthetic-service-key"

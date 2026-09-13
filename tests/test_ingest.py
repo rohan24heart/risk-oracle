@@ -1,4 +1,4 @@
-﻿"""Offline orchestration checks: collection and persistence are replaced with fakes."""
+"""Offline orchestration checks: collection and persistence are replaced with fakes."""
 from pathlib import Path
 from unittest.mock import Mock
 from uuid import UUID
@@ -136,3 +136,21 @@ def test_workflow_schedule_safety_and_runtime_contract():
     assert 'run: python -m risk_oracle.ingest' in secret_steps[0]
     assert set(re.findall(r'\$\{\{ secrets\.([A-Z_]+) \}\}',text))=={'BASE_RPC_URL','SUPABASE_URL','SUPABASE_SERVICE_KEY'}
     assert 'echo ' not in text and 'set -x' not in text and 'upload-artifact' not in text
+
+
+@pytest.mark.parametrize("http_status,code,table", [(403,"42501","assessments"), (None,None,None)])
+def test_cli_preserves_safe_persistence_diagnostic(pipeline, monkeypatch, capsys, http_status, code, table):
+    snapshot, collector, writer = pipeline
+    from risk_oracle.scoring_v01 import assess_snapshot
+    monkeypatch.setenv('GITHUB_SHA',SHA)
+    monkeypatch.setattr(ingest,'assess_snapshot',lambda *args,**kwargs: assess_snapshot(snapshot,calculated_at=NOW))
+    writer.write.side_effect = PersistenceError(
+        "Invalid Supabase service key configuration.", table=table, http_status=http_status, error_code=code)
+    assert ingest.main() == 1
+    output = capsys.readouterr()
+    report = json.loads(output.err)
+    assert report['table'] == table and report['http_status'] == http_status and report['error_code'] == code
+    assert report['message']
+    assert report['completed_tables'] == [] and report['commit_outcome_unknown'] is False
+    assert SECRET not in output.err and output.out == ''
+    assert writer.write.call_count == 1

@@ -1,4 +1,4 @@
-﻿"""One production v0.1 ingestion cycle; importing this module performs no I/O.
+"""One production v0.1 ingestion cycle; importing this module performs no I/O.
 
 Run with python -m risk_oracle.ingest. No automatic retries: persistence can
 partially commit, so failed/ambiguous writes require read-only reconciliation.
@@ -18,12 +18,17 @@ from risk_oracle.scoring_v01 import METHODOLOGY_VERSION, assess_snapshot
 
 class IngestionError(RuntimeError):
     """Safe diagnostic fields only; never retain provider error text."""
-    def __init__(self, stage, *, completed_tables=(), outcome_unknown=False):
+    def __init__(self, stage, *, completed_tables=(), outcome_unknown=False, persistence_error=None):
         super().__init__(f"Ingestion failed during {stage}.")
         self.stage = stage
         self.completed_tables = tuple(table for table in completed_tables
                                       if table in ("assessments", "reserve_snapshots", "evidence_records"))
         self.outcome_unknown = bool(outcome_unknown)
+        self.table = persistence_error.table if persistence_error is not None else None
+        self.http_status = persistence_error.http_status if persistence_error is not None else None
+        self.error_code = persistence_error.error_code if persistence_error is not None else None
+        self.sanitized_message = (persistence_error.sanitized_message if persistence_error is not None
+                                  else f"Ingestion failed during {stage}.")
 
 
 def run_cycle(*, code_revision: str, run_id: str | None = None, clock=None) -> dict:
@@ -55,7 +60,7 @@ def run_cycle(*, code_revision: str, run_id: str | None = None, clock=None) -> d
                     freshness=assessment.freshness_status, methodology_version="v0.1")
     except PersistenceError as error:
         raise IngestionError(stage, completed_tables=error.completed_tables,
-                             outcome_unknown=error.outcome_unknown) from None
+                             outcome_unknown=error.outcome_unknown, persistence_error=error) from None
     except Exception:
         # Validation and transport exceptions can contain credential-bearing input.
         raise IngestionError(stage) from None
@@ -68,6 +73,8 @@ def main() -> int:
         print(json.dumps(dict(status="failed", stage=error.stage,
                               completed_tables=error.completed_tables,
                               commit_outcome_unknown=error.outcome_unknown,
+                              table=error.table, http_status=error.http_status,
+                              error_code=error.error_code, message=error.sanitized_message,
                               error="Ingestion did not complete; no automatic retry. Reconcile any partial writes before rerunning.")),
               file=sys.stderr)
         return 1

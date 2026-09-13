@@ -6,6 +6,7 @@ transport failures can have an unknown commit outcome. No retries or overwrites.
 from dataclasses import dataclass
 from hashlib import sha256
 import json
+import re
 from uuid import UUID, NAMESPACE_URL, uuid5
 
 import httpx
@@ -15,13 +16,76 @@ from risk_oracle.config import load_settings
 from risk_oracle.models import EvidenceRecord, PrecomputedAssessment, ReserveSnapshot, RpcSource
 
 
+# Error response bodies may echo credentials or row data. Publish only fixed
+# summaries, never raw message/details/hint text, headers, URLs or exception text.
+_LOCAL_MESSAGES = {
+    "SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured.",
+    "Invalid Supabase project URL configuration.",
+    "Invalid Supabase service key configuration.",
+    "Invalid shared model payload.",
+    "A non-empty, trimmed methodology version is required.",
+    "Assessment methodology version does not match the requested storage version.",
+    "Assessment and snapshot identity do not match.",
+    "Assessment contains unresolved evidence or observations.",
+    "Duplicate evidence row identifiers.",
+    "Persistence payload contains a configured credential.",
+}
+_CODE_MESSAGES = {
+    "23502": "Required database column is null.",
+    "23503": "Foreign-key constraint violation.",
+    "23505": "Unique constraint violation; duplicate record rejected.",
+    "23514": "Database check constraint violation; verify applied migrations and payload contract.",
+    "42501": "Database permission denied; verify service-role credentials, grants and RLS.",
+    "22P02": "Invalid input representation for a database column.",
+    "22003": "Database numeric value out of range.",
+    "42P01": "Database table does not exist.",
+    "42703": "Database column does not exist.",
+    "PGRST204": "Column missing from PostgREST schema cache.",
+    "PGRST205": "Table missing from PostgREST schema cache.",
+    "PGRST301": "JWT verification failed.",
+    "PGRST302": "Authentication required; anonymous access is disabled.",
+    "PGRST303": "JWT claims validation failed.",
+}
+
+
 class PersistenceError(RuntimeError):
     def __init__(self, message: str, *, table: str | None = None,
-                 completed_tables: tuple[str, ...] = (), outcome_unknown: bool = False):
-        super().__init__(message)
-        self.table = table
-        self.completed_tables = completed_tables
-        self.outcome_unknown = outcome_unknown
+                 completed_tables: tuple[str, ...] = (), outcome_unknown: bool = False,
+                 http_status: int | None = None, error_code: str | None = None):
+        tables = ("assessments", "reserve_snapshots", "evidence_records")
+        self.table = table if table in tables else None
+        self.completed_tables = tuple(t for t in completed_tables if t in tables)
+        self.outcome_unknown = bool(outcome_unknown)
+        self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
+        self.error_code = error_code if isinstance(error_code, str) and re.fullmatch(r"[0-9A-Z]{5}|PGRST[0-9]{3}", error_code) else None
+        if self.http_status is not None:
+            summary = _CODE_MESSAGES.get(self.error_code) or {
+                400: "Supabase rejected the request.",
+                401: "Supabase authentication rejected; verify the project and service key.",
+                403: "Supabase access denied; verify service-role credentials and database grants.",
+                404: "Supabase REST resource not found.",
+                409: "Database constraint conflict.",
+                429: "Supabase rate limit exceeded.",
+            }.get(self.http_status, "Supabase returned an unsuccessful HTTP response.")
+            self.sanitized_message = summary
+            super().__init__(f"Supabase write failed for {self.table}: HTTP {self.http_status}. {summary}")
+        else:
+            self.sanitized_message = ("Transport error; commit outcome unknown." if self.outcome_unknown
+                                      else message if message in _LOCAL_MESSAGES
+                                      else "Persistence failed; unrecognized error text suppressed.")
+            super().__init__(self.sanitized_message)
+
+
+def _response_error_code(response):
+    """Retain only the machine error code; non-JSON/oversized bodies are omitted."""
+    try:
+        if len(response.content) > 65536:
+            return None
+        body = response.json()
+        code = body.get("code") if isinstance(body, dict) else None
+        return code if isinstance(code, str) and re.fullmatch(r"[0-9A-Z]{5}|PGRST[0-9]{3}", code) else None
+    except (ValueError, UnicodeError):
+        return None
 
 
 @dataclass(frozen=True)
@@ -148,6 +212,7 @@ class SupabaseWriter:
                 raise PersistenceError(
                     f"Supabase write failed for {table}: HTTP {response.status_code}.",
                     table=table, completed_tables=tuple(completed),
+                    http_status=response.status_code, error_code=_response_error_code(response),
                 )
             completed.append(table)
         return WriteResult(assessment_id, snapshot_id, row_ids)

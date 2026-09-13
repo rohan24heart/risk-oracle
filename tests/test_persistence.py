@@ -187,3 +187,53 @@ def test_explicit_assessment_methodology_cannot_be_mislabelled(models, http):
     assert http["calls"] == []
     persistence.SupabaseWriter().write(assessment, snapshot, methodology_version="v0.1")
     assert http["calls"][0][2][0]["methodology_version"] == "v0.1"
+
+
+@pytest.mark.parametrize("status,code,phrase", [
+    (401, "PGRST301", "JWT verification"),
+    (403, "42501", "permission denied"),
+    (409, "23505", "duplicate record"),
+    (400, "23514", "check constraint"),
+    (400, "PGRST204", "schema cache"),
+])
+def test_structured_http_diagnostics_discard_sensitive_body(models, http, monkeypatch, status, code, phrase):
+    def post(url, **kwargs):
+        http["calls"].append((url, kwargs))
+        return httpx.Response(status, json={
+            "code": code, "message": "Authorization: Bearer " + http["secret"],
+            "details": "https://user:password@private.test/path?api_key=" + http["secret"],
+            "hint": "BASE_RPC_URL=https://rpc.test/private-token",})
+    monkeypatch.setattr(persistence.httpx, "post", post)
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    error = caught.value
+    assert error.http_status == status and error.error_code == code
+    assert phrase in error.sanitized_message
+    assert error.table == "assessments" and error.completed_tables == ()
+    assert error.outcome_unknown is False and len(http["calls"]) == 1
+    output = str(error) + json.dumps(vars(error))
+    for forbidden in (http["secret"], "Authorization", "Bearer", "https://", "password", "private-token"):
+        assert forbidden not in output
+
+
+@pytest.mark.parametrize("body", ["<html>private-token</html>", "[]", '{"code":123}',
+    '{"code":"sb_secret_do_not_log","message":"private-token"}',
+    '{"code":"ZZ999","message":"private-token"}'])
+def test_nonstandard_error_bodies_remain_safe(models, http, monkeypatch, body):
+    monkeypatch.setattr(persistence.httpx, "post", lambda *args, **kwargs: httpx.Response(502, text=body))
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    error = caught.value
+    assert error.http_status == 502 and error.table == "assessments"
+    assert error.error_code == ("ZZ999" if "ZZ999" in body else None)
+    assert "private-token" not in str(error) and "sb_secret" not in str(error)
+
+
+def test_local_failure_has_safe_message_and_no_http_metadata(models, http, monkeypatch):
+    monkeypatch.setattr(persistence, "load_settings", lambda: Settings(
+        supabase_url="https://user:private-password@example.test", supabase_service_key=http["secret"]))
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    assert caught.value.sanitized_message == "Invalid Supabase project URL configuration."
+    assert caught.value.http_status is None and caught.value.error_code is None and caught.value.table is None
+    assert http["calls"] == []
