@@ -1,4 +1,4 @@
-﻿# Risk Oracle
+# Risk Oracle
 
 An experimental, deterministic reserve-condition risk index for **native USDC on
 Aave V3 Base**. Scores range from 0 to 100; higher means more observed stress or
@@ -53,11 +53,29 @@ Supabase stores private tables with RLS enabled:
 History supports reproducibility and auditing. The writer performs separate inserts,
 not one atomic transaction; partial failures require reconciliation before serving.
 
-**Next step:** GitHub Actions ingestion/scoring approximately every 15 minutes.
-It is not implemented yet. The planned Cloudflare Worker will read precomputed
-Supabase results only, returning STALE/UNKNOWN without live RPC or scoring fallback.
-Cloudflare Worker serving and x402 payment gating are not implemented yet; planned
-payments settle in USDC on Base to a controlled wallet.
+The production ingestion entrypoint and [GitHub Actions workflow](.github/workflows/ingest.yml)
+are implemented. The workflow runs `python -m risk_oracle.ingest` on Python 3.12,
+scheduled every 15 minutes (`*/15 * * * *`, UTC), with manual dispatch support.
+It performs one collection/snapshot, real v0.1 assessment, and persistence cycle.
+Valid UNKNOWN assessments remain UNKNOWN. Failures exit nonzero with sanitized
+stage diagnostics; there are no automatic write retries.
+
+To activate it, publish the workflow on the repository's default branch, enable
+Actions, and configure GitHub Secrets `BASE_RPC_URL`, `SUPABASE_URL`, and
+`SUPABASE_SERVICE_KEY`. Manual runs are restricted to the default branch. One
+concurrency group prevents overlapping scheduled/manual runs without cancelling
+an active writer. The job times out after 10 minutes (ingestion step: 8 minutes).
+Scheduled runs can be delayed; freshness remains authoritative. After a partial or
+ambiguous write failure, reconcile stored rows before rerunning; duplicates are
+rejected by the existing database constraint.
+
+The workflow installs project runtime dependencies only, uses commit-pinned
+checkout/setup actions, and exposes secrets only to the ingestion step. No live
+workflow run was performed during implementation.
+
+Cloudflare Worker serving and x402 payment gating remain planned. The Worker will
+read precomputed Supabase results only, returning STALE/UNKNOWN without live RPC
+or scoring fallback. Planned payments settle in USDC on Base to a controlled wallet.
 
 ## Local development
 

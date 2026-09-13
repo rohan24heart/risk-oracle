@@ -1,0 +1,38 @@
+﻿name: Ingest native USDC v0.1
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One group across scheduled/manual runs and refs. Never cancel a writer mid-cycle.
+concurrency:
+  group: production-base-usdc-ingestion
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install project runtime dependencies
+        run: python -m pip install --disable-pip-version-check .
+      - name: Collect, score and persist one USDC assessment
+        timeout-minutes: 8
+        env:
+          BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python -m risk_oracle.ingest
