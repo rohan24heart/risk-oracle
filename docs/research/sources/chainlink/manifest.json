@@ -1,0 +1,83 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/LICENSE",
+    "file": "LICENSE",
+    "sha256": "84b719224e55821ee8627111223a117c37a326e59eb6705594c61794f8c87e72",
+    "bytes": 1093,
+    "retrieved_utc": "2026-09-11T23:01:26.351355+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/index.mdx",
+    "file": "index.mdx",
+    "sha256": "e15d075cc6d494f850bba8f54ea30c46719fdff9f54816bb49836ace7110c65e",
+    "bytes": 17444,
+    "retrieved_utc": "2026-09-11T23:01:26.351133+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/api-reference.mdx",
+    "file": "api-reference.mdx",
+    "sha256": "d1e1e54914dd1563d4eb8ba26631980d1d5a64266ee488fcb0cc2ba446ceacdc",
+    "bytes": 22557,
+    "retrieved_utc": "2026-09-11T23:01:26.170765+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/selecting-data-feeds.mdx",
+    "file": "selecting-data-feeds.mdx",
+    "sha256": "5c9d0d155345285eccdddf19c0d179df43736f3afce1e6fd619595b5c8e02277",
+    "bytes": 50162,
+    "retrieved_utc": "2026-09-11T23:01:26.254623+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/l2-sequencer-feeds.mdx",
+    "file": "l2-sequencer-feeds.mdx",
+    "sha256": "80e031c05af2887910b48a22e67086e73c5a000b6f4d8b0c8922e3a89f346594",
+    "bytes": 12106,
+    "retrieved_utc": "2026-09-11T23:01:26.347446+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/developer-responsibilities.mdx",
+    "file": "developer-responsibilities.mdx",
+    "sha256": "a7da98119e17354851812195f96d44f15805715865eca1e3264da3c3ceae71c1",
+    "bytes": 4507,
+    "retrieved_utc": "2026-09-11T23:01:26.350150+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/price-feeds.mdx",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/historical-data.mdx",
+    "file": "historical-data.mdx",
+    "sha256": "915330bb7e00ac6380227727573a064edd74d4dfc75ffc8198ba92570f83e270",
+    "bytes": 7694,
+    "retrieved_utc": "2026-09-11T23:01:26.580742+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/data-sources.mdx",
+    "file": "data-sources.mdx",
+    "sha256": "1af1b74e4d8082afeb9b210b1744b1c2dd9b692446c0fd549a41407506cbf935",
+    "bytes": 5575,
+    "retrieved_utc": "2026-09-11T23:01:26.581739+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/data-feeds/price-feeds/index.mdx",
+    "file": "price-feeds.mdx",
+    "sha256": "9f72c2579cdb83a2cabc50db769f1ae54bdf86fbf7ef538c4469fa63b1cb205d",
+    "bytes": 1062,
+    "retrieved_utc": "2026-09-11T23:02:04.033492+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/src/content/architecture-overview/architecture-decentralized-model.mdx",
+    "file": "architecture-decentralized-model.mdx",
+    "sha256": "e7ad686bc2ff9443c69f307decc51d3a6e9ff9a2e62e38dc76c34eaff2c1d2ed",
+    "bytes": 4771,
+    "retrieved_utc": "2026-09-11T23:02:04.218469+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/smartcontractkit/documentation/main/public/samples/DataFeeds/DataConsumerWithSequencerCheck.sol",
+    "file": "DataConsumerWithSequencerCheck.sol",
+    "sha256": "46878767dc7703abe2a9d93d72890bbe129c44226aff658e504625e73b0ff73f",
+    "bytes": 2142,
+    "retrieved_utc": "2026-09-11T23:02:04.499165+00:00"
+  }
+]

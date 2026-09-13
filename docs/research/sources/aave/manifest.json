@@ -1,0 +1,162 @@
+﻿[
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/LICENSE",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "LICENSE",
+        "local_file":  "origin-LICENSE",
+        "retrieved_utc":  "2026-09-11T23:02:56.4060986Z",
+        "sha256":  "E1D4497339FFC807E4FEFCF6B36E23B44B876B83512B611E0D765C7FD0AD8655",
+        "bytes":  6211
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/src/contracts/misc/AaveOracle.sol",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "src/contracts/misc/AaveOracle.sol",
+        "local_file":  "origin-AaveOracle.sol",
+        "retrieved_utc":  "2026-09-11T23:02:56.7227683Z",
+        "sha256":  "3DDE068C1F25D0FA14508C0BA0521283B6DF0CA2DD55BDBEB4D3E49EFEA0858A",
+        "bytes":  5116
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/src/contracts/protocol/libraries/logic/LiquidationLogic.sol",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "src/contracts/protocol/libraries/logic/LiquidationLogic.sol",
+        "local_file":  "origin-LiquidationLogic.sol",
+        "retrieved_utc":  "2026-09-11T23:02:57.0935947Z",
+        "sha256":  "5D344687E00EC2CED5D92E455BC2F8DD16AF4AE547EEA48EE8A3E840113AC291",
+        "bytes":  29642
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/src/contracts/protocol/libraries/logic/GenericLogic.sol",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "src/contracts/protocol/libraries/logic/GenericLogic.sol",
+        "local_file":  "origin-GenericLogic.sol",
+        "retrieved_utc":  "2026-09-11T23:02:57.3603858Z",
+        "sha256":  "4B18019505E4FBFAB2624F371F28946557588C22F5C51E331FD2595613BA516D",
+        "bytes":  10585
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/src/contracts/protocol/libraries/logic/ValidationLogic.sol",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "src/contracts/protocol/libraries/logic/ValidationLogic.sol",
+        "local_file":  "origin-ValidationLogic.sol",
+        "retrieved_utc":  "2026-09-11T23:02:57.5602739Z",
+        "sha256":  "0BFB51E54F0A8589FBF24BBC03046B12EE6F189641B7A2A6F1B2874ACBB2BB45",
+        "bytes":  20419
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.3/Aave-v3.3-features.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.3/Aave-v3.3-features.md",
+        "local_file":  "origin-Aave-v3.3-features.md",
+        "retrieved_utc":  "2026-09-11T23:02:57.6977996Z",
+        "sha256":  "524126D4068F8A94758DA5A81926CABA97AD3D1F666795601FF3692848301F83",
+        "bytes":  11549
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.6/Aave-v3.6-features.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.6/Aave-v3.6-features.md",
+        "local_file":  "origin-Aave-v3.6-features.md",
+        "retrieved_utc":  "2026-09-11T23:02:57.9304039Z",
+        "sha256":  "F848957CCF783104F85C3B3858779E4360EB7B7CC6DF6593E9716583088C4CC9",
+        "bytes":  17122
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.7/isolated-emode.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.7/isolated-emode.md",
+        "local_file":  "origin-isolated-emode.md",
+        "retrieved_utc":  "2026-09-11T23:02:58.1110287Z",
+        "sha256":  "D3B266A6E164A37EC285C6B5228F8263FAFD0F547B499D18C9CB0AF963A6A4EC",
+        "bytes":  19371
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.7/mode-removal.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.7/mode-removal.md",
+        "local_file":  "origin-mode-removal.md",
+        "retrieved_utc":  "2026-09-11T23:02:58.3102648Z",
+        "sha256":  "8D9407D3C1D194114353D21A4E001FE85E8B094747E3A75A055112F04DE8E199",
+        "bytes":  4895
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.7/sentinel-removal.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.7/sentinel-removal.md",
+        "local_file":  "origin-sentinel-removal.md",
+        "retrieved_utc":  "2026-09-11T23:02:58.4727449Z",
+        "sha256":  "05B1EEE04566149BAE68FA3883F6B42FEE94C2768480945A9E7E6C758625ADDD",
+        "bytes":  11205
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/8305565ae342f1773c42cd2e4593f175fe5968a0/docs/3.7/liquidation-rounding.md",
+        "repository":  "aave-dao/aave-v3-origin",
+        "revision":  "8305565ae342f1773c42cd2e4593f175fe5968a0",
+        "repository_path":  "docs/3.7/liquidation-rounding.md",
+        "local_file":  "origin-liquidation-rounding.md",
+        "retrieved_utc":  "2026-09-11T23:02:58.6519330Z",
+        "sha256":  "9ACF46D0E286EE34D088A79C6C4193985EA57A35D9833BAC45F07A508E55E605",
+        "bytes":  4064
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-price-feeds/00d0f14b0734dc6faf41960bb9023c0b742a944b/LICENSE",
+        "repository":  "aave-dao/aave-price-feeds",
+        "revision":  "00d0f14b0734dc6faf41960bb9023c0b742a944b",
+        "repository_path":  "LICENSE",
+        "local_file":  "feeds-LICENSE",
+        "retrieved_utc":  "2026-09-11T23:02:58.8062481Z",
+        "sha256":  "C651E16E53A1CA7B4411D130E9CC5709409E0AFB3DC50BDB04D04B728EA0B5C8",
+        "bytes":  6370
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-price-feeds/00d0f14b0734dc6faf41960bb9023c0b742a944b/README.md",
+        "repository":  "aave-dao/aave-price-feeds",
+        "revision":  "00d0f14b0734dc6faf41960bb9023c0b742a944b",
+        "repository_path":  "README.md",
+        "local_file":  "feeds-README.md",
+        "retrieved_utc":  "2026-09-11T23:02:58.8936045Z",
+        "sha256":  "CECA60ADE9183BD5C374F8489158C252DEEAE1568974E556F008098D41C7B8F1",
+        "bytes":  6976
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-price-feeds/00d0f14b0734dc6faf41960bb9023c0b742a944b/src/contracts/README.md",
+        "repository":  "aave-dao/aave-price-feeds",
+        "revision":  "00d0f14b0734dc6faf41960bb9023c0b742a944b",
+        "repository_path":  "src/contracts/README.md",
+        "local_file":  "feeds-src_contracts_README.md",
+        "retrieved_utc":  "2026-09-11T23:02:59.0060871Z",
+        "sha256":  "6B4DECABBC2DD04C466A20D9FB9E27216BEB3893C34B3ECF3FC28F766DD101F4",
+        "bytes":  4513
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-price-feeds/00d0f14b0734dc6faf41960bb9023c0b742a944b/src/contracts/PriceCapAdapterStable.sol",
+        "repository":  "aave-dao/aave-price-feeds",
+        "revision":  "00d0f14b0734dc6faf41960bb9023c0b742a944b",
+        "repository_path":  "src/contracts/PriceCapAdapterStable.sol",
+        "local_file":  "feeds-src_contracts_PriceCapAdapterStable.sol",
+        "retrieved_utc":  "2026-09-11T23:02:59.0941707Z",
+        "sha256":  "8FD986387FD721C526B3985FF228C46EF562A7016E60BA5977271C556EE9C038",
+        "bytes":  2796
+    },
+    {
+        "source_url":  "https://raw.githubusercontent.com/aave-dao/aave-price-feeds/00d0f14b0734dc6faf41960bb9023c0b742a944b/src/contracts/PriceCapAdapterBase.sol",
+        "repository":  "aave-dao/aave-price-feeds",
+        "revision":  "00d0f14b0734dc6faf41960bb9023c0b742a944b",
+        "repository_path":  "src/contracts/PriceCapAdapterBase.sol",
+        "local_file":  "feeds-src_contracts_PriceCapAdapterBase.sol",
+        "retrieved_utc":  "2026-09-11T23:02:59.1977547Z",
+        "sha256":  "B54000C6D5D686BAA661C15527656FC536102E55A9579AE08E1103D60F3B5C2A",
+        "bytes":  7582
+    }
+]

@@ -1,0 +1,896 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BlockRef": {
+      "additionalProperties": false,
+      "properties": {
+        "chain_id": {
+          "const": 8453,
+          "title": "Chain Id",
+          "type": "integer"
+        },
+        "number": {
+          "description": "Decimal uint256, maximum 2**256-1",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "title": "Number",
+          "type": "string"
+        },
+        "hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Hash",
+          "type": "string"
+        },
+        "parent_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Parent Hash",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "finality": {
+          "enum": [
+            "unsafe",
+            "safe",
+            "finalized",
+            "unknown"
+          ],
+          "title": "Finality",
+          "type": "string"
+        },
+        "canonicality_checked_at": {
+          "format": "date-time",
+          "title": "Canonicality Checked At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "chain_id",
+        "number",
+        "hash",
+        "parent_hash",
+        "timestamp",
+        "finality",
+        "canonicality_checked_at"
+      ],
+      "title": "BlockRef",
+      "type": "object"
+    },
+    "DocumentSource": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "official_document",
+            "service_policy"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Reference",
+          "type": "string"
+        },
+        "section": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Section",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Revision",
+          "type": "string"
+        },
+        "document_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Document Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "reference",
+        "section",
+        "revision",
+        "document_hash"
+      ],
+      "title": "DocumentSource",
+      "type": "object"
+    },
+    "EvidenceRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "canonicalization_version": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Canonicalization Version",
+          "type": "string"
+        },
+        "source": {
+          "discriminator": {
+            "mapping": {
+              "official_document": "#/$defs/DocumentSource",
+              "onchain_rpc": "#/$defs/RpcSource",
+              "service_policy": "#/$defs/DocumentSource"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RpcSource"
+            },
+            {
+              "$ref": "#/$defs/DocumentSource"
+            }
+          ],
+          "title": "Source"
+        },
+        "collected_at": {
+          "format": "date-time",
+          "title": "Collected At",
+          "type": "string"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Updated At"
+        },
+        "run_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "code_revision": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Code Revision",
+          "type": "string"
+        },
+        "normalizer_version": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Normalizer Version",
+          "type": "string"
+        },
+        "parent_evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Parent Evidence Ids",
+          "type": "array"
+        },
+        "transformation": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transformation"
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "failure"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "raw_result": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Result"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error Code"
+        }
+      },
+      "required": [
+        "id",
+        "content_hash",
+        "canonicalization_version",
+        "source",
+        "collected_at",
+        "source_updated_at",
+        "run_id",
+        "code_revision",
+        "normalizer_version",
+        "parent_evidence_ids",
+        "transformation",
+        "outcome",
+        "raw_result",
+        "error_code"
+      ],
+      "title": "EvidenceRecord",
+      "type": "object"
+    },
+    "FactorResult": {
+      "additionalProperties": false,
+      "properties": {
+        "factor": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Factor",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "evaluated",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "explanation": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "observation_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "factor",
+        "status",
+        "score",
+        "explanation",
+        "rule_id",
+        "observation_ids",
+        "evidence_ids"
+      ],
+      "title": "FactorResult",
+      "type": "object"
+    },
+    "Freshness": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/FreshnessStatus"
+        },
+        "evaluated_at": {
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "fresh_until": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fresh Until"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expires At"
+        },
+        "reasons": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "unknown_after": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unknown After"
+        }
+      },
+      "required": [
+        "status",
+        "evaluated_at",
+        "fresh_until",
+        "expires_at",
+        "reasons"
+      ],
+      "title": "Freshness",
+      "type": "object"
+    },
+    "FreshnessStatus": {
+      "enum": [
+        "FRESH",
+        "DEGRADED",
+        "STALE",
+        "UNKNOWN"
+      ],
+      "title": "FreshnessStatus",
+      "type": "string"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "field": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Field",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "present",
+            "missing",
+            "invalid",
+            "stale",
+            "unsupported",
+            "not_applicable"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "datatype": {
+          "enum": [
+            "uint256",
+            "int256",
+            "boolean",
+            "text"
+          ],
+          "title": "Datatype",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "$ref": "#/$defs/Unit"
+        },
+        "block": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "collected_at": {
+          "format": "date-time",
+          "title": "Collected At",
+          "type": "string"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Updated At"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "id",
+        "field",
+        "state",
+        "datatype",
+        "value",
+        "unit",
+        "block",
+        "collected_at",
+        "source_updated_at",
+        "freshness",
+        "evidence_ids",
+        "reason"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "PrecomputedAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "methodology_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Methodology Version"
+        },
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/$defs/ReserveSubject"
+        },
+        "snapshot_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "snapshot_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Snapshot Hash",
+          "type": "string"
+        },
+        "policy_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Policy Hash",
+          "type": "string"
+        },
+        "input_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Input Hash",
+          "type": "string"
+        },
+        "computed_at": {
+          "format": "date-time",
+          "title": "Computed At",
+          "type": "string"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "risk_level": {
+          "enum": [
+            "low",
+            "moderate",
+            "high",
+            "critical",
+            "unknown"
+          ],
+          "title": "Risk Level",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Confidence"
+        },
+        "freshness_status": {
+          "enum": [
+            "fresh",
+            "degraded",
+            "stale",
+            "unknown"
+          ],
+          "title": "Freshness Status",
+          "type": "string"
+        },
+        "factors": {
+          "items": {
+            "$ref": "#/$defs/FactorResult"
+          },
+          "minItems": 1,
+          "title": "Factors",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "subject",
+        "snapshot_id",
+        "snapshot_hash",
+        "policy_hash",
+        "input_hash",
+        "computed_at",
+        "freshness",
+        "score",
+        "risk_level",
+        "confidence",
+        "freshness_status",
+        "factors",
+        "evidence_ids",
+        "limitations"
+      ],
+      "title": "PrecomputedAssessment",
+      "type": "object"
+    },
+    "ReserveSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/$defs/ReserveSubject"
+        },
+        "block": {
+          "$ref": "#/$defs/BlockRef"
+        },
+        "collected_at": {
+          "format": "date-time",
+          "title": "Collected At",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "manifest_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Manifest Hash",
+          "type": "string"
+        },
+        "acquisition_status": {
+          "enum": [
+            "complete",
+            "partial",
+            "failed"
+          ],
+          "title": "Acquisition Status",
+          "type": "string"
+        },
+        "observations": {
+          "minProperties": 1,
+          "patternProperties": {
+            "\\S": {
+              "$ref": "#/$defs/Observation"
+            }
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Observations",
+          "type": "object"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRecord"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        }
+      },
+      "required": [
+        "id",
+        "subject",
+        "block",
+        "collected_at",
+        "run_id",
+        "manifest_hash",
+        "acquisition_status",
+        "observations",
+        "evidence",
+        "freshness"
+      ],
+      "title": "ReserveSnapshot",
+      "type": "object"
+    },
+    "ReserveSubject": {
+      "additionalProperties": false,
+      "properties": {
+        "chain_id": {
+          "const": 8453,
+          "title": "Chain Id",
+          "type": "integer"
+        },
+        "protocol": {
+          "const": "aave-v3",
+          "title": "Protocol",
+          "type": "string"
+        },
+        "pool": {
+          "pattern": "^0x[0-9a-f]{40}$",
+          "title": "Pool",
+          "type": "string"
+        },
+        "asset": {
+          "pattern": "^0x[0-9a-f]{40}$",
+          "title": "Asset",
+          "type": "string"
+        }
+      },
+      "required": [
+        "chain_id",
+        "protocol",
+        "pool",
+        "asset"
+      ],
+      "title": "ReserveSubject",
+      "type": "object"
+    },
+    "RpcSource": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "onchain_rpc",
+          "title": "Kind",
+          "type": "string"
+        },
+        "provider_id": {
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "block": {
+          "$ref": "#/$defs/BlockRef"
+        },
+        "contract": {
+          "pattern": "^0x[0-9a-f]{40}$",
+          "title": "Contract",
+          "type": "string"
+        },
+        "method": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Method",
+          "type": "string"
+        },
+        "call_signature": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Call Signature",
+          "type": "string"
+        },
+        "call_data": {
+          "pattern": "^0x(?:[0-9a-f]{2})*$",
+          "title": "Call Data",
+          "type": "string"
+        },
+        "abi_hash": {
+          "pattern": "^0x[0-9a-f]{64}$",
+          "title": "Abi Hash",
+          "type": "string"
+        },
+        "decoder_version": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Decoder Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "provider_id",
+        "block",
+        "contract",
+        "method",
+        "call_signature",
+        "call_data",
+        "abi_hash",
+        "decoder_version"
+      ],
+      "title": "RpcSource",
+      "type": "object"
+    },
+    "Unit": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "decimals": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Decimals",
+          "type": "integer"
+        },
+        "quote_currency": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Quote Currency"
+        }
+      },
+      "required": [
+        "name",
+        "decimals",
+        "quote_currency"
+      ],
+      "title": "Unit",
+      "type": "object"
+    }
+  },
+  "title": "Risk Oracle shared contracts"
+}

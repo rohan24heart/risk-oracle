@@ -1,0 +1,62 @@
+{
+  "retrieved_utc": "2026-09-11T23:04:10.135806+00:00",
+  "research_as_of": "2026-09-11",
+  "authority": "U.S. government primary legal sources",
+  "law": "Public Law 119-27, approved July 18, 2025, 139 Stat. 419",
+  "publication_url": "https://www.govinfo.gov/app/details/PLAW-119publ27",
+  "copyright_note": "Federal statute and U.S. government source documents preserved as primary material.",
+  "files": [
+    {
+      "file": "PLAW-119publ27.pdf",
+      "url": "https://www.govinfo.gov/content/pkg/PLAW-119publ27/pdf/PLAW-119publ27.pdf",
+      "sha256": "6eaa3cf8ff45f1b2aff792adc73d69605a657a64eb54f72d5a47c182692de38f",
+      "bytes": 315625,
+      "review_status": "Full enacted statute archived; all 20 sections reviewed via full official HTML/text. 48-page slip law, 139 Stat. 419-466."
+    },
+    {
+      "file": "PLAW-119publ27.html",
+      "url": "https://www.govinfo.gov/content/pkg/PLAW-119publ27/html/PLAW-119publ27.htm",
+      "sha256": "ebe440e8fec4c1159b5ef0162708f63f5999b5be8f27914836c9116af944192a",
+      "bytes": 185846,
+      "review_status": "Full official GPO HTML reviewed across sections 1-20."
+    },
+    {
+      "file": "PLAW-119publ27.txt",
+      "url": "https://www.govinfo.gov/content/pkg/PLAW-119publ27/html/PLAW-119publ27.htm",
+      "sha256": "a56387658ce0d057accab8a10c1c4e2b4958ab0887ec91438c536f3d6dbd5f0a",
+      "bytes": 187476,
+      "review_status": "Locally derived text: tags removed and HTML entities decoded; full text retained. This derivative is not a separate official publication."
+    },
+    {
+      "file": "GENIUS-Act-compilation-2026-05-20.pdf",
+      "url": "https://www.govinfo.gov/content/pkg/COMPS-18221/pdf/COMPS-18221.pdf",
+      "sha256": "1afd98a26512bffefb7ac5e610751609f908f612ed32d9ba4a023ee8f87a39a5",
+      "bytes": 254832,
+      "review_status": "Official compilation archived; cover/version status checked (May 20, 2026; states law has not been amended). Body not separately compared word-for-word with slip law."
+    },
+    {
+      "file": "Treasury-2026-16796-proposed-rule.pdf",
+      "url": "https://www.govinfo.gov/content/pkg/FR-2026-08-18/pdf/2026-16796.pdf",
+      "sha256": "b5682164ab42122dfd7dfe106317086f7bfdda4f49bfa3495d7a13be9733dbb6",
+      "bytes": 309728,
+      "review_status": "Full proposed rule archived; title/status/date and opening scope reviewed only. Not a complete rulemaking review."
+    },
+    {
+      "file": "OCC-2026-69-status.html",
+      "url": "https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-69.html",
+      "sha256": "5823a051e5039bcb22adc474aadc60c43935524258c82a928234ffd51640b469",
+      "bytes": 59401,
+      "review_status": "Official August 19, 2026 release reviewed for stated expected final-rule timing; not an issued rule."
+    },
+    {
+      "file": "Treasury-sb0605-status.html",
+      "url": "https://home.treasury.gov/news/press-releases/sb0605",
+      "sha256": "451e9bdcd3e91bb8d7c1d1754b42a42034a3197471e78b59a6287cd382effe74",
+      "bytes": 70084,
+      "review_status": "Official August 17, 2026 release reviewed for proposed section 3 rulemaking status.",
+      "original_sha256": "9e6c12205f8782ceba875b18bf3f33751d05476cc64ea0049219ae3a2df111e0",
+      "original_bytes": 70103,
+      "sanitization": "Removed third-party BOOMR browser telemetry API key before public distribution. Legal/release text unchanged. Stored file is a sanitized derivative; original hash retained for provenance."
+    }
+  ]
+}

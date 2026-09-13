@@ -1,0 +1,56 @@
+[
+  {
+    "file": "erc-8004.md",
+    "url": "https://raw.githubusercontent.com/ethereum/ERCs/master/ERCS/erc-8004.md",
+    "bytes": 24470,
+    "sha256": "249dc3d96ad7bbe4afd25cacd14be942eb87751abcf1608bab19a610f3c3f8a9",
+    "retrieved_utc": "2026-09-11T23:05:27.788338+00:00"
+  },
+  {
+    "file": "x402-LICENSE",
+    "url": "https://raw.githubusercontent.com/x402-foundation/x402/main/LICENSE",
+    "bytes": 11324,
+    "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+    "retrieved_utc": "2026-09-11T23:05:27.923001+00:00"
+  },
+  {
+    "file": "x402-v2.md",
+    "url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/x402-specification-v2.md",
+    "bytes": 38469,
+    "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+    "retrieved_utc": "2026-09-11T23:05:27.937701+00:00"
+  },
+  {
+    "file": "x402-whitepaper.pdf",
+    "url": "https://www.x402.org/x402-whitepaper.pdf",
+    "bytes": 995488,
+    "sha256": "7df282dfc3f36688d7b135125590ea42b6884b2057651512a3f80c6bdc970658",
+    "retrieved_utc": "2026-09-11T23:05:28.999853+00:00"
+  },
+  {
+    "file": "x402-http.md",
+    "url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/transports-v2/http.md",
+    "bytes": 7396,
+    "sha256": "4f0298aaa23ac75de0eb49b1e96e6e67a5b910d7527b3a71c63e426b3bf5bdfb",
+    "retrieved_utc": "2026-09-11T23:05:27.897148+00:00"
+  },
+  {
+    "file": "x402-exact-evm.md",
+    "url": "https://raw.githubusercontent.com/x402-foundation/x402/main/specs/schemes/exact/scheme_exact_evm.md",
+    "bytes": 21131,
+    "sha256": "186111e25a5bdd5be839635ba1c441885567de09b57bdd93f78e465ca3b8e792",
+    "retrieved_utc": "2026-09-11T23:05:27.864327+00:00"
+  },
+  {
+    "file": "x402-bazaar.md",
+    "url": "https://docs.x402.org/extensions/bazaar.md",
+    "bytes": 37957,
+    "sha256": "7a333883fe3106cd9850433e7436bbbda40ff97b794b8244d7d3a3bd9276b1e2",
+    "retrieved_utc": "2026-09-11T23:05:28.240640+00:00"
+  },
+  {
+    "file": "x402-schemes-overview.md",
+    "url": "https://docs.x402.org/core-concepts/schemes.md",
+    "error": "HTTP Error 404: Not Found"
+  }
+]

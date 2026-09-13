@@ -1,0 +1,61 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test, coverage, and tool caches
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local configuration and editor files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs, transient output, and local scratch files
+*.log
+*.log.*
+logs/
+log/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*.swo
+*~
+tmp/
+temp/
+.tmp/
+.cache/
+.cache-*/
+.tox/
+.nox/
+.hypothesis/
+
+# Local credential/key exports (never publish)
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+credentials.*.json
+service-account*.json

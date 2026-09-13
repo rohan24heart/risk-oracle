@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "risk-oracle"
+version = "0.1.0"
+description = "A minimal FastAPI application for Risk Oracle."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "httpx>=0.27,<1.0",
+    "eth-abi>=5.2,<6.0",
+    "eth-hash[pycryptodome]>=0.7,<1.0",
+    "pydantic>=2.0,<3.0",
+    "python-dotenv>=1.0,<2.0",
+    "uvicorn>=0.30,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<10.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["risk_oracle*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+
+
+[tool.setuptools.package-data]
+risk_oracle = ["providers/*.json"]
