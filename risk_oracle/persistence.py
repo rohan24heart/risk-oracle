@@ -1,12 +1,15 @@
 ﻿"""Private REST persistence, independent of acquisition and scoring.
 
 Three inserts are NOT an atomic transaction. Failures report confirmed stages;
-transport failures can have an unknown commit outcome. No retries or overwrites.
+transient first-table failures get at most three identical attempts. No overwrites.
+Later-table failures are never retried; ambiguous conflicts require reconciliation.
 """
 from dataclasses import dataclass
 from hashlib import sha256
 import json
 import re
+import random
+import time
 from uuid import UUID, NAMESPACE_URL, uuid5
 
 import httpx
@@ -200,19 +203,36 @@ class SupabaseWriter:
             headers["Authorization"] = f"Bearer {key}"
         completed = []
         for table, rows in batches:
-            try:
-                response = httpx.post(str(url).rstrip("/") + "/rest/v1/" + table,
-                                      headers=headers, json=rows, timeout=15.0, follow_redirects=False)
-            except (httpx.RequestError, httpx.InvalidURL):
-                raise PersistenceError(
-                    f"Supabase write failed for {table}: transport error; commit outcome unknown.",
-                    table=table, completed_tables=tuple(completed), outcome_unknown=True,
-                ) from None
-            if response.status_code not in (201, 204):
-                raise PersistenceError(
-                    f"Supabase write failed for {table}: HTTP {response.status_code}.",
-                    table=table, completed_tables=tuple(completed),
-                    http_status=response.status_code, error_code=_response_error_code(response),
-                )
+            ambiguous = False
+            for attempt in range(1, 4):
+                try:
+                    response = httpx.post(str(url).rstrip("/") + "/rest/v1/" + table,
+                                          headers=headers, json=rows, timeout=15.0, follow_redirects=False)
+                except (httpx.InvalidURL, httpx.UnsupportedProtocol):
+                    raise PersistenceError("Invalid Supabase project URL configuration.",
+                        table=table, completed_tables=tuple(completed), outcome_unknown=ambiguous) from None
+                except httpx.RequestError:
+                    ambiguous = True
+                    error = PersistenceError("Transport failure.", table=table,
+                        completed_tables=tuple(completed), outcome_unknown=True)
+                    retryable = True
+                else:
+                    if response.status_code in (201, 204):
+                        break
+                    code = _response_error_code(response)
+                    transient = response.status_code in (408, 503, 504)
+                    ambiguous = ambiguous or transient
+                    error = PersistenceError("HTTP failure.", table=table,
+                        completed_tables=tuple(completed), outcome_unknown=ambiguous,
+                        http_status=response.status_code, error_code=code)
+                    # Database/authorization errors are not transient just because
+                    # a gateway supplied an unusual HTTP status.
+                    retryable = transient and code in (None, "PGRST000", "PGRST001", "PGRST002")
+                if completed or not retryable or attempt == 3:
+                    raise error from None
+                # Reuse the exact first-table payload/UUID. Existing unique keys
+                # prevent duplicates after an ambiguous commit. A resulting 409
+                # stops the cycle; it is never treated as success or overwritten.
+                time.sleep(2 ** (attempt - 1) + random.uniform(0, 1))
             completed.append(table)
         return WriteResult(assessment_id, snapshot_id, row_ids)

@@ -237,3 +237,80 @@ def test_local_failure_has_safe_message_and_no_http_metadata(models, http, monke
     assert caught.value.sanitized_message == "Invalid Supabase project URL configuration."
     assert caught.value.http_status is None and caught.value.error_code is None and caught.value.table is None
     assert http["calls"] == []
+
+@pytest.mark.parametrize('failure', [408, 503, 504, 'transport'])
+def test_transient_first_insert_then_success(models, http, monkeypatch, failure):
+    calls, delays = [], []
+    def post(url, **kwargs):
+        calls.append((url, kwargs))
+        if len(calls) == 1:
+            if failure == 'transport':
+                raise httpx.ReadTimeout('private credential')
+            return httpx.Response(failure)
+        return httpx.Response(201)
+    monkeypatch.setattr(persistence.httpx, 'post', post)
+    monkeypatch.setattr(persistence.time, 'sleep', delays.append)
+    monkeypatch.setattr(persistence.random, 'uniform', lambda a, b: 0.25)
+    write(models)
+    assert len(calls) == 4 and calls[0] == calls[1]
+    assert delays == [1.25]
+    assert [c[0].rsplit('/', 1)[1] for c in calls] == ['assessments','assessments','reserve_snapshots','evidence_records']
+
+
+def test_repeated_504_exhausts_three_attempts(models, http, monkeypatch):
+    calls, delays = [], []
+    def post(url, **kwargs):
+        calls.append(kwargs['json'])
+        return httpx.Response(504, text='private credential')
+    monkeypatch.setattr(persistence.httpx, 'post', post)
+    monkeypatch.setattr(persistence.time, 'sleep', delays.append)
+    monkeypatch.setattr(persistence.random, 'uniform', lambda a,b: 0.5)
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    assert len(calls) == 3 and calls[0] == calls[1] == calls[2]
+    assert delays == [1.5, 2.5]
+    assert caught.value.http_status == 504 and caught.value.completed_tables == ()
+    assert caught.value.outcome_unknown is True
+    assert 'private credential' not in str(caught.value)
+
+
+@pytest.mark.parametrize('status,code', [(401,None),(403,'42501'),(409,'23505'),(504,'23514')])
+def test_auth_and_database_errors_not_retried(models, http, monkeypatch, status, code):
+    calls=[]
+    def post(url, **kwargs):
+        calls.append(url)
+        return httpx.Response(status, json={'code':code})
+    monkeypatch.setattr(persistence.httpx, 'post', post)
+    monkeypatch.setattr(persistence.time, 'sleep', lambda _: pytest.fail('Unexpected retry'))
+    with pytest.raises(persistence.PersistenceError):
+        write(models)
+    assert len(calls)==1
+
+
+@pytest.mark.parametrize('stage', [2,3])
+def test_partial_write_504_is_never_retried(models, http, monkeypatch, stage):
+    calls=[]
+    def post(url, **kwargs):
+        calls.append(url)
+        return httpx.Response(504 if len(calls)==stage else 201)
+    monkeypatch.setattr(persistence.httpx,'post',post)
+    monkeypatch.setattr(persistence.time,'sleep',lambda _: pytest.fail('Partial write retried'))
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    assert len(calls)==stage
+    assert caught.value.completed_tables==('assessments','reserve_snapshots')[:stage-1]
+    assert caught.value.outcome_unknown is True
+
+
+def test_ambiguous_commit_then_conflict_stops_without_second_table(models, http, monkeypatch):
+    calls=[]
+    def post(url, **kwargs):
+        calls.append((url,kwargs['json']))
+        return httpx.Response(504) if len(calls)==1 else httpx.Response(409,json={'code':'23505'})
+    monkeypatch.setattr(persistence.httpx,'post',post)
+    monkeypatch.setattr(persistence.time,'sleep',lambda _:None)
+    with pytest.raises(persistence.PersistenceError) as caught:
+        write(models)
+    assert len(calls)==2 and calls[0]==calls[1]
+    assert caught.value.http_status==409 and caught.value.error_code=='23505'
+    assert caught.value.outcome_unknown is True

@@ -1,6 +1,6 @@
 """One production v0.1 ingestion cycle; importing this module performs no I/O.
 
-Run with python -m risk_oracle.ingest. No automatic retries: persistence can
+Run with python -m risk_oracle.ingest. Bounded first-table retries only: persistence can
 partially commit, so failed/ambiguous writes require read-only reconciliation.
 """
 from datetime import datetime, timezone
@@ -32,7 +32,7 @@ class IngestionError(RuntimeError):
 
 
 def run_cycle(*, code_revision: str, run_id: str | None = None, clock=None) -> dict:
-    """Collect once, assess once, write once. A valid UNKNOWN is persisted unchanged."""
+    """Collect and assess once; persist with bounded first-table retries. A valid UNKNOWN is persisted unchanged."""
     stage = "configuration"
     try:
         if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", code_revision):
@@ -75,7 +75,7 @@ def main() -> int:
                               commit_outcome_unknown=error.outcome_unknown,
                               table=error.table, http_status=error.http_status,
                               error_code=error.error_code, message=error.sanitized_message,
-                              error="Ingestion did not complete; no automatic retry. Reconcile any partial writes before rerunning.")),
+                              error="Ingestion did not complete; retries exhausted or unsafe. Reconcile any partial writes before rerunning.")),
               file=sys.stderr)
         return 1
     print(json.dumps(result, allow_nan=False))

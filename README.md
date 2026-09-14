@@ -55,10 +55,14 @@ not one atomic transaction; partial failures require reconciliation before servi
 
 The production ingestion entrypoint and [GitHub Actions workflow](.github/workflows/ingest.yml)
 are implemented. The workflow runs `python -m risk_oracle.ingest` on Python 3.12,
-scheduled every 15 minutes (`*/15 * * * *`, UTC), with manual dispatch support.
+scheduled every 15 minutes (`7,22,37,52 * * * *`, UTC), with manual dispatch support.
 It performs one collection/snapshot, real v0.1 assessment, and persistence cycle.
 Valid UNKNOWN assessments remain UNKNOWN. Failures exit nonzero with sanitized
-stage diagnostics; there are no automatic write retries.
+stage diagnostics. First-table HTTP 408/503/504 and transport failures receive up
+to three identical attempts, with exponential backoff plus jitter. Validation,
+authentication, constraint and partial-write failures are not retried. Existing
+unique keys prevent duplicate first-table inserts; an ambiguous-commit conflict
+stops the cycle rather than being assumed successful.
 
 To activate it, publish the workflow on the repository's default branch, enable
 Actions, and configure GitHub Secrets `BASE_RPC_URL`, `SUPABASE_URL`, and

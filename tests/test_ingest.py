@@ -119,7 +119,7 @@ def test_missing_revision_fails_closed(pipeline, monkeypatch, capsys):
 
 def test_workflow_schedule_safety_and_runtime_contract():
     text=(Path(__file__).resolve().parents[1]/'.github/workflows/ingest.yml').read_text(encoding='utf-8-sig')
-    assert re.search(r"^    - cron: ['\"]\*/15 \* \* \* \*['\"]$",text,re.M)
+    assert re.search(r"^    - cron: ['\"]7,22,37,52 \* \* \* \*['\"]$",text,re.M)
     assert re.search(r'^  workflow_dispatch:\s*$',text,re.M)
     assert 'pull_request' not in text and 'push:' not in text
     assert 'group: production-base-usdc-ingestion' in text and 'cancel-in-progress: false' in text
