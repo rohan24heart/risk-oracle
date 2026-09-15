@@ -3,7 +3,13 @@ pragma solidity ^0.8.13;
 
 import {ReserveConstitutionV0} from "./ReserveConstitutionV0.sol";
 
-interface IReserveTokenV0 {
+/// @dev Requires USDC-style status getters; generic ERC-20 tokens may not support these.
+interface IReserveTokenStatusV0 {
+    function paused() external view returns (bool);
+    function isBlacklisted(address account) external view returns (bool);
+}
+
+interface IReserveTokenV0 is IReserveTokenStatusV0 {
     function balanceOf(address account) external view returns (uint256);
     function decimals() external view returns (uint8);
 }
@@ -13,9 +19,9 @@ interface ILiabilityTokenV0 {
     function decimals() external view returns (uint8);
 }
 
-/// @notice Validates the observed reserve balance against the configured liability token's total supply.
+/// @notice Validates usable reserves against the configured liability token's total supply.
 /// @dev Fund the vault by transferring the configured token directly to its address.
-///      V0 recognizes only this token balance; Aave exposure is always zero.
+///      V0 recognizes only usable liquid reserves as backing; Aave exposure is always zero.
 contract ReserveVaultV0 {
     IReserveTokenV0 public immutable reserveToken;
     ReserveConstitutionV0 public immutable constitution;
@@ -39,9 +45,17 @@ contract ReserveVaultV0 {
         if (reserveToken.decimals() != liabilityToken.decimals()) revert DecimalScaleMismatch();
     }
 
-    /// @notice Actual idle reserve balance, in the configured token's smallest units.
-    function liquidReserveBalance() public view returns (uint256) {
+    /// @notice Nominal holdings in the token's smallest units, regardless of pause/blacklist status.
+    function nominalReserveBalance() public view returns (uint256) {
         return reserveToken.balanceOf(address(this));
+    }
+
+    /// @notice Nominal holdings if unpaused and this vault is not blacklisted; otherwise zero.
+    /// @dev Status-read failures revert. These checks cover USDC-style token controls only,
+    ///      not restrictions on a particular transfer recipient or other token-specific controls.
+    function liquidReserveBalance() public view returns (uint256) {
+        if (reserveToken.paused() || reserveToken.isBlacklisted(address(this))) return 0;
+        return nominalReserveBalance();
     }
 
     /// @notice Reverts with a constitutional error if observed reserves cannot support liabilities.

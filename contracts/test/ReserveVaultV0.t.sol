@@ -5,12 +5,14 @@ import {Test} from "forge-std/Test.sol";
 import {ReserveConstitutionV0} from "../src/ReserveConstitutionV0.sol";
 import {ReserveVaultV0} from "../src/ReserveVaultV0.sol";
 
-/// @dev Test-only ERC-20. Minting is unrestricted to construct test balances.
+/// @dev Test-only ERC-20. Minting and status setters are unrestricted for test setup.
 contract MockReserveERC20 {
     string public constant name = "Mock USDC";
     string public constant symbol = "mUSDC";
     uint8 public immutable decimals;
     uint256 public totalSupply;
+    bool public paused;
+    mapping(address => bool) public isBlacklisted;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
 
@@ -19,6 +21,14 @@ contract MockReserveERC20 {
 
     constructor(uint8 decimalScale) {
         decimals = decimalScale;
+    }
+
+    function setPaused(bool value) external {
+        paused = value;
+    }
+
+    function setBlacklisted(address account, bool value) external {
+        isBlacklisted[account] = value;
     }
 
     function mint(address to, uint256 amount) external {
@@ -40,12 +50,15 @@ contract MockReserveERC20 {
     }
 
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(!isBlacklisted[msg.sender], "Blacklisted");
         allowance[from][msg.sender] -= amount;
         _transfer(from, to, amount);
         return true;
     }
 
     function _transfer(address from, address to, uint256 amount) internal {
+        require(!paused, "Paused");
+        require(!isBlacklisted[from] && !isBlacklisted[to], "Blacklisted");
         require(to != address(0), "Zero recipient");
         balanceOf[from] -= amount;
         balanceOf[to] += amount;
@@ -168,11 +181,20 @@ contract ReserveVaultV0Test is Test {
         vault.validateReserveState();
     }
 
-    function testFuzz_ValidationMatchesActualReserves(uint256 reserves, uint256 liabilities) public {
+    function testFuzz_ValidationMatchesUsableReserves(
+        uint256 reserves,
+        uint256 liabilities,
+        bool paused,
+        bool blacklisted
+    ) public {
         liabilityToken.mint(address(this), liabilities);
         _deposit(reserves);
-        assertEq(vault.liquidReserveBalance(), reserves);
-        if (liabilities > reserves) {
+        token.setPaused(paused);
+        token.setBlacklisted(address(vault), blacklisted);
+        uint256 usable = paused || blacklisted ? 0 : reserves;
+        assertEq(vault.nominalReserveBalance(), reserves);
+        assertEq(vault.liquidReserveBalance(), usable);
+        if (liabilities > usable) {
             vm.expectRevert(ReserveConstitutionV0.InsufficientBacking.selector);
         }
         vault.validateReserveState();
@@ -225,6 +247,118 @@ contract ReserveVaultV0Test is Test {
             address(vault).staticcall(abi.encodePacked(vault.validateReserveState.selector, abi.encode(uint256(0))));
         assertFalse(acceptedWithExtraData);
         assertEq(result, abi.encodeWithSelector(ReserveConstitutionV0.InsufficientBacking.selector));
+    }
+
+    function test_OperationalTokenHasNominalAndUsableReserves() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        assertEq(vault.nominalReserveBalance(), 100e6);
+        assertEq(vault.liquidReserveBalance(), 100e6);
+        vault.validateReserveState();
+    }
+
+    function test_PauseRemovesLiquidityAndUnpauseRestoresIt() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        token.setPaused(true);
+        _assertFrozenReserves();
+        vm.prank(address(vault));
+        vm.expectRevert(bytes("Paused"));
+        token.transfer(address(this), 1);
+        token.setPaused(false);
+        assertEq(vault.nominalReserveBalance(), 100e6);
+        assertEq(vault.liquidReserveBalance(), 100e6);
+        vault.validateReserveState();
+    }
+
+    function test_BlacklistRemovesLiquidityAndUnblacklistRestoresIt() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        token.setBlacklisted(address(vault), true);
+        _assertFrozenReserves();
+        vm.prank(address(vault));
+        vm.expectRevert(bytes("Blacklisted"));
+        token.transfer(address(this), 1);
+        token.setBlacklisted(address(vault), false);
+        assertEq(vault.nominalReserveBalance(), 100e6);
+        assertEq(vault.liquidReserveBalance(), 100e6);
+        vault.validateReserveState();
+    }
+
+    function test_BothControlsMustBeClearedToRestoreLiquidity() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        token.setPaused(true);
+        token.setBlacklisted(address(vault), true);
+        _assertFrozenReserves();
+        token.setPaused(false);
+        _assertFrozenReserves();
+        token.setPaused(true);
+        token.setBlacklisted(address(vault), false);
+        _assertFrozenReserves();
+        token.setPaused(false);
+        assertEq(vault.liquidReserveBalance(), 100e6);
+        vault.validateReserveState();
+    }
+
+    function test_BlacklistedCallerDoesNotRemoveVaultLiquidity() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        token.setBlacklisted(address(this), true);
+        assertEq(vault.liquidReserveBalance(), 100e6);
+        vault.validateReserveState();
+    }
+
+    function test_FrozenReservesWithZeroSupplyPasses() public {
+        _deposit(100e6);
+        token.setPaused(true);
+        assertEq(vault.nominalReserveBalance(), 100e6);
+        assertEq(vault.liquidReserveBalance(), 0);
+        vault.validateReserveState();
+        token.setPaused(false);
+        token.setBlacklisted(address(vault), true);
+        assertEq(vault.liquidReserveBalance(), 0);
+        vault.validateReserveState();
+    }
+
+    function test_StatusReadFailuresRevert() public {
+        _deposit(100e6);
+        liabilityToken.mint(address(this), 100e6);
+        bytes[2] memory queries =
+            [abi.encodeCall(token.paused, ()), abi.encodeCall(token.isBlacklisted, (address(vault)))];
+        for (uint256 i = 0; i < queries.length; i++) {
+            vm.mockCallRevert(address(token), queries[i], hex"deadbeef");
+            assertEq(vault.nominalReserveBalance(), 100e6);
+            vm.expectRevert(bytes(hex"deadbeef"));
+            vault.liquidReserveBalance();
+            vm.expectRevert(bytes(hex"deadbeef"));
+            vault.validateReserveState();
+            vm.clearMockedCalls();
+        }
+    }
+
+    function test_MalformedStatusResponsesRevert() public {
+        _deposit(100e6);
+        bytes[2] memory queries =
+            [abi.encodeCall(token.paused, ()), abi.encodeCall(token.isBlacklisted, (address(vault)))];
+        for (uint256 i = 0; i < queries.length; i++) {
+            vm.mockCall(address(token), queries[i], hex"");
+            assertEq(vault.nominalReserveBalance(), 100e6);
+            vm.expectRevert();
+            vault.liquidReserveBalance();
+            vm.expectRevert();
+            vault.validateReserveState();
+            vm.clearMockedCalls();
+        }
+    }
+
+    function _assertFrozenReserves() internal {
+        assertEq(vault.nominalReserveBalance(), 100e6);
+        assertEq(vault.liquidReserveBalance(), 0);
+        assertEq(liabilityToken.totalSupply(), 100e6);
+        vm.expectCall(address(constitution), abi.encodeCall(constitution.validateReserveState, (0, 100e6, 0, 0)));
+        vm.expectRevert(ReserveConstitutionV0.InsufficientBacking.selector);
+        vault.validateReserveState();
     }
 
     function _deposit(uint256 amount) internal {
