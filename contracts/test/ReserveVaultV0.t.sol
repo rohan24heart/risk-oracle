@@ -66,37 +66,56 @@ contract MockReserveERC20 {
     }
 }
 
+/// @dev Test-only aToken balance and underlying metadata; no production minting capability.
+contract MockAaveTokenV0 {
+    address public immutable UNDERLYING_ASSET_ADDRESS;
+    uint8 public immutable decimals;
+    mapping(address => uint256) public balanceOf;
+
+    constructor(address underlying, uint8 decimalScale) {
+        UNDERLYING_ASSET_ADDRESS = underlying;
+        decimals = decimalScale;
+    }
+
+    function mint(address account, uint256 amount) external {
+        balanceOf[account] += amount;
+    }
+}
+
 contract ReserveVaultV0Test is Test {
     MockReserveERC20 public token;
     MockReserveERC20 public liabilityToken;
+    MockAaveTokenV0 public aToken;
     ReserveConstitutionV0 public constitution;
     ReserveVaultV0 public vault;
 
     function setUp() public {
         token = new MockReserveERC20(6);
         liabilityToken = new MockReserveERC20(6);
+        aToken = new MockAaveTokenV0(address(token), 6);
         constitution = new ReserveConstitutionV0();
-        vault = new ReserveVaultV0(address(token), address(constitution), address(liabilityToken));
+        vault = new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(aToken));
     }
 
     function test_ConstructorStoresDependencies() public view {
         assertEq(address(vault.reserveToken()), address(token));
         assertEq(address(vault.constitution()), address(constitution));
         assertEq(address(vault.liabilityToken()), address(liabilityToken));
+        assertEq(address(vault.aaveToken()), address(aToken));
     }
 
     function test_ConstructorRejectsMissingTokenCode() public {
         vm.expectRevert(ReserveVaultV0.InvalidReserveToken.selector);
-        new ReserveVaultV0(address(0), address(constitution), address(liabilityToken));
+        new ReserveVaultV0(address(0), address(constitution), address(liabilityToken), address(aToken));
         vm.expectRevert(ReserveVaultV0.InvalidReserveToken.selector);
-        new ReserveVaultV0(address(0x1234), address(constitution), address(liabilityToken));
+        new ReserveVaultV0(address(0x1234), address(constitution), address(liabilityToken), address(aToken));
     }
 
     function test_ConstructorRejectsMissingConstitutionCode() public {
         vm.expectRevert(ReserveVaultV0.InvalidConstitution.selector);
-        new ReserveVaultV0(address(token), address(0), address(liabilityToken));
+        new ReserveVaultV0(address(token), address(0), address(liabilityToken), address(aToken));
         vm.expectRevert(ReserveVaultV0.InvalidConstitution.selector);
-        new ReserveVaultV0(address(token), address(0x1234), address(liabilityToken));
+        new ReserveVaultV0(address(token), address(0x1234), address(liabilityToken), address(aToken));
     }
 
     function test_ActualDepositsIncreaseBacking() public {
@@ -202,23 +221,25 @@ contract ReserveVaultV0Test is Test {
 
     function test_ConstructorRejectsMissingLiabilityTokenCode() public {
         vm.expectRevert(ReserveVaultV0.InvalidLiabilityToken.selector);
-        new ReserveVaultV0(address(token), address(constitution), address(0));
+        new ReserveVaultV0(address(token), address(constitution), address(0), address(aToken));
         vm.expectRevert(ReserveVaultV0.InvalidLiabilityToken.selector);
-        new ReserveVaultV0(address(token), address(constitution), address(0x1234));
+        new ReserveVaultV0(address(token), address(constitution), address(0x1234), address(aToken));
     }
 
     function test_ConstructorRejectsMismatchedDecimals() public {
         MockReserveERC20 differentScale = new MockReserveERC20(18);
         vm.expectRevert(ReserveVaultV0.DecimalScaleMismatch.selector);
-        new ReserveVaultV0(address(token), address(constitution), address(differentScale));
+        new ReserveVaultV0(address(token), address(constitution), address(differentScale), address(aToken));
         vm.expectRevert(ReserveVaultV0.DecimalScaleMismatch.selector);
-        new ReserveVaultV0(address(differentScale), address(constitution), address(liabilityToken));
+        new ReserveVaultV0(address(differentScale), address(constitution), address(liabilityToken), address(aToken));
     }
 
     function test_MatchingNonSixDecimalsPasses() public {
         MockReserveERC20 reserve18 = new MockReserveERC20(18);
         MockReserveERC20 liability18 = new MockReserveERC20(18);
-        ReserveVaultV0 vault18 = new ReserveVaultV0(address(reserve18), address(constitution), address(liability18));
+        MockAaveTokenV0 aToken18 = new MockAaveTokenV0(address(reserve18), 18);
+        ReserveVaultV0 vault18 =
+            new ReserveVaultV0(address(reserve18), address(constitution), address(liability18), address(aToken18));
         reserve18.mint(address(vault18), 1e18);
         liability18.mint(address(this), 1e18);
         vault18.validateReserveState();
@@ -358,6 +379,88 @@ contract ReserveVaultV0Test is Test {
         assertEq(liabilityToken.totalSupply(), 100e6);
         vm.expectCall(address(constitution), abi.encodeCall(constitution.validateReserveState, (0, 100e6, 0, 0)));
         vm.expectRevert(ReserveConstitutionV0.InsufficientBacking.selector);
+        vault.validateReserveState();
+    }
+
+    function test_ConstructorRejectsInvalidAaveToken() public {
+        vm.expectRevert(ReserveVaultV0.InvalidAaveToken.selector);
+        new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(0));
+        vm.expectRevert(ReserveVaultV0.InvalidAaveToken.selector);
+        new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(0x1234));
+        vm.expectRevert(ReserveVaultV0.InvalidAaveToken.selector);
+        new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(token));
+    }
+
+    function test_ConstructorRejectsWrongAaveUnderlying() public {
+        MockAaveTokenV0 wrongAsset = new MockAaveTokenV0(address(liabilityToken), 6);
+        vm.expectRevert(ReserveVaultV0.AaveUnderlyingMismatch.selector);
+        new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(wrongAsset));
+    }
+
+    function test_ConstructorRejectsWrongAaveDecimals() public {
+        MockAaveTokenV0 wrongScale = new MockAaveTokenV0(address(token), 18);
+        vm.expectRevert(ReserveVaultV0.DecimalScaleMismatch.selector);
+        new ReserveVaultV0(address(token), address(constitution), address(liabilityToken), address(wrongScale));
+    }
+
+    function test_ActualAaveBalanceAndExactCapAreRecognized() public {
+        _deposit(60e6);
+        aToken.mint(address(vault), 40e6);
+        aToken.mint(address(this), 900e6);
+        liabilityToken.mint(address(this), 100e6);
+        assertEq(vault.aaveReserveBalance(), 40e6, "Only vault-owned aTokens count");
+        assertEq(vault.totalBacking(), 100e6);
+        vm.expectCall(
+            address(constitution), abi.encodeCall(constitution.validateReserveState, (100e6, 100e6, 60e6, 40e6))
+        );
+        vault.validateReserveState();
+        aToken.mint(address(vault), 1);
+        vm.expectRevert(ReserveConstitutionV0.ExcessiveAaveExposure.selector);
+        vault.validateReserveState();
+    }
+
+    function test_FrozenIdleBalanceIsNotCountedAlongsideAave() public {
+        _deposit(60e6);
+        aToken.mint(address(vault), 40e6);
+        liabilityToken.mint(address(this), 100e6);
+        token.setPaused(true);
+        assertEq(vault.nominalReserveBalance(), 60e6);
+        assertEq(vault.liquidReserveBalance(), 0);
+        assertEq(vault.aaveReserveBalance(), 40e6);
+        assertEq(vault.totalBacking(), 40e6);
+        vm.expectRevert(ReserveConstitutionV0.InsufficientBacking.selector);
+        vault.validateReserveState();
+    }
+
+    function test_AaveReadFailureDoesNotDefaultToZero() public {
+        vm.mockCallRevert(address(aToken), abi.encodeCall(aToken.balanceOf, (address(vault))), hex"deadbeef");
+        vm.expectRevert(bytes(hex"deadbeef"));
+        vault.validateReserveState();
+    }
+
+    function test_CombinedBackingOverflowReverts() public {
+        _deposit(type(uint256).max);
+        aToken.mint(address(vault), 1);
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x11));
+        vault.totalBacking();
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x11));
+        vault.validateReserveState();
+    }
+
+    function testFuzz_ValidationUsesActualSplit(uint128 liquid, uint128 aave, uint128 liabilities) public {
+        _deposit(liquid);
+        aToken.mint(address(vault), aave);
+        liabilityToken.mint(address(this), liabilities);
+        uint256 backing = uint256(liquid) + uint256(aave);
+        assertEq(vault.totalBacking(), backing);
+        // uint128 inputs allow independent exact cross-products without overflow.
+        if (backing < liabilities) {
+            vm.expectRevert(ReserveConstitutionV0.InsufficientBacking.selector);
+        } else if (uint256(liquid) * 10_000 < backing * 2_500) {
+            vm.expectRevert(ReserveConstitutionV0.InsufficientLiquidUSDC.selector);
+        } else if (uint256(aave) * 10_000 > backing * 4_000) {
+            vm.expectRevert(ReserveConstitutionV0.ExcessiveAaveExposure.selector);
+        }
         vault.validateReserveState();
     }
 

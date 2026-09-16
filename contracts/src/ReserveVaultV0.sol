@@ -19,30 +19,51 @@ interface ILiabilityTokenV0 {
     function decimals() external view returns (uint8);
 }
 
-/// @notice Validates usable reserves against the configured liability token's total supply.
+/// @dev The configured token must be the Aave aToken for the reserve asset, not a scaled/static wrapper.
+interface IAaveTokenV0 {
+    function balanceOf(address account) external view returns (uint256);
+    function decimals() external view returns (uint8);
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+}
+
+/// @notice Validates usable idle reserves plus Aave exposure against the liability token's total supply.
 /// @dev Fund the vault by transferring the configured token directly to its address.
-///      V0 recognizes only usable liquid reserves as backing; Aave exposure is always zero.
+///      Only usable idle reserves and the configured Aave position are recognized as backing.
 contract ReserveVaultV0 {
     IReserveTokenV0 public immutable reserveToken;
     ReserveConstitutionV0 public immutable constitution;
     ILiabilityTokenV0 public immutable liabilityToken;
+    IAaveTokenV0 public immutable aaveToken;
 
     error InvalidReserveToken();
     error InvalidConstitution();
     error InvalidLiabilityToken();
     error DecimalScaleMismatch();
+    error InvalidAaveToken();
+    error AaveUnderlyingMismatch();
 
     /// @dev Dependencies must be deployed contracts. Their correctness is trusted.
-    ///      Both tokens must expose decimals() and use the same scale; no conversion is performed.
+    ///      Reserve, liability and aToken decimal scales must match; no conversion is performed.
     ///      The liability token's entire supply is treated as outstanding reserve-backed liabilities.
-    constructor(address reserveTokenAddress, address constitutionAddress, address liabilityTokenAddress) {
+    constructor(
+        address reserveTokenAddress,
+        address constitutionAddress,
+        address liabilityTokenAddress,
+        address aaveTokenAddress
+    ) {
         if (reserveTokenAddress.code.length == 0) revert InvalidReserveToken();
         if (constitutionAddress.code.length == 0) revert InvalidConstitution();
         if (liabilityTokenAddress.code.length == 0) revert InvalidLiabilityToken();
+        if (aaveTokenAddress.code.length == 0 || aaveTokenAddress == reserveTokenAddress) revert InvalidAaveToken();
         reserveToken = IReserveTokenV0(reserveTokenAddress);
         constitution = ReserveConstitutionV0(constitutionAddress);
         liabilityToken = ILiabilityTokenV0(liabilityTokenAddress);
-        if (reserveToken.decimals() != liabilityToken.decimals()) revert DecimalScaleMismatch();
+        aaveToken = IAaveTokenV0(aaveTokenAddress);
+        uint8 reserveDecimals = reserveToken.decimals();
+        if (reserveDecimals != liabilityToken.decimals() || reserveDecimals != aaveToken.decimals()) {
+            revert DecimalScaleMismatch();
+        }
+        if (aaveToken.UNDERLYING_ASSET_ADDRESS() != reserveTokenAddress) revert AaveUnderlyingMismatch();
     }
 
     /// @notice Nominal holdings in the token's smallest units, regardless of pause/blacklist status.
@@ -58,12 +79,24 @@ contract ReserveVaultV0 {
         return nominalReserveBalance();
     }
 
-    /// @notice Reverts with a constitutional error if observed reserves cannot support liabilities.
+    /// @notice Aave position in underlying reserve units, including accrued interest.
+    /// @dev Uses balanceOf, not scaledBalanceOf. This is exposure, not a promise of immediate withdrawal.
+    function aaveReserveBalance() public view returns (uint256) {
+        return aaveToken.balanceOf(address(this));
+    }
+
+    /// @notice Recognized backing: usable idle reserves plus the configured Aave position.
+    function totalBacking() public view returns (uint256) {
+        return liquidReserveBalance() + aaveReserveBalance();
+    }
+
+    /// @notice Reverts with a constitutional error if the internally derived reserve state is invalid.
     /// @dev Reads current total supply on every call, in the shared token decimal scale.
     function validateReserveState() external view {
         uint256 liquidUSDC = liquidReserveBalance();
         uint256 totalLiabilities = liabilityToken.totalSupply();
-        uint256 totalBacking = liquidUSDC; // Only liquid reserves are recognized in this vault version.
-        constitution.validateReserveState(totalBacking, totalLiabilities, liquidUSDC, 0);
+        uint256 aaveUSDC = aaveReserveBalance();
+        uint256 backing = liquidUSDC + aaveUSDC;
+        constitution.validateReserveState(backing, totalLiabilities, liquidUSDC, aaveUSDC);
     }
 }
