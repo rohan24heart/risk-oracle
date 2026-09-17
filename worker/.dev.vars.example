@@ -1,0 +1,4 @@
+﻿# Local placeholders only. Keep actual values in ignored .dev.vars or Worker secrets.
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_READER_JWT=

@@ -59,3 +59,5 @@ temp/
 credentials.json
 credentials.*.json
 service-account*.json
+
+node_modules/

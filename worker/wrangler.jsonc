@@ -1,0 +1,9 @@
+﻿{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "risk-oracle-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-16",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": false }
+}
