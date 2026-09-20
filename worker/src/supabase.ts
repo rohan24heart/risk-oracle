@@ -33,7 +33,7 @@ export async function readJson(message: Request | Response, maximumBytes: number
   return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
 }
 
-function configuration(env: Env): { url: string; key: string; jwt: string } {
+export function configuration(env: Env): { url: string; key: string; jwt: string } {
   // Fixed hosted Supabase origin only: no arbitrary endpoints, paths, redirects or ports.
   if (!/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/.test(env.SUPABASE_URL)
     || !/^sb_publishable_[A-Za-z0-9_-]+$/.test(env.SUPABASE_PUBLISHABLE_KEY)
@@ -59,7 +59,7 @@ export async function latestAssessment(env: Env): Promise<Assessment> {
     const abort = new AbortController();
     timeout = setTimeout(() => abort.abort(), 5000);
     stage = "SUPABASE_FETCH_ERROR";
-    // The only outbound request in the app. Empty args use the database's fixed scope.
+    // Empty args use the database's fixed scope.
     let response: Response;
     try {
       response = await fetch(config.url, {

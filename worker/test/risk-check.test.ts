@@ -3,11 +3,20 @@ import worker from "../src/index";
 import { USDC, type Assessment } from "../src/contracts";
 import { DATABASE_PATH, type Env } from "../src/supabase";
 
+// These contract/serving regressions simulate an already settled payment.
+// payment.test.ts exercises the actual SDK and facilitator HTTP boundary.
+vi.mock("../src/payment", () => ({ purchase: async (_r: Request, _e: unknown, a: Assessment) => ({
+  kind: "paid", assessment: a, settlement: { success: true, network: "eip155:8453",
+    transaction: "0x" + "b".repeat(64), payer: "0x" + "c".repeat(40), amount: "10000" },
+}) }));
+vi.mock("../src/telemetry", () => ({ recordSettledQuery: async () => undefined }));
 const NOW = Date.parse("2026-09-16T12:00:00.000Z");
 const input = { chain: "base", protocol: "aave-v3", asset: USDC } as const;
 const encode = (value: unknown) => btoa(JSON.stringify(value)).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 const token = (role = "risk_api_reader", exp = 2_000_000_000) => `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ role, exp })}.syntheticSignature`;
-const env: Env = {
+const env = {
+  X402_PAY_TO: "0x" + "1".repeat(40), X402_FACILITATOR_URL: "https://api.cdp.coinbase.com/platform/v2/x402",
+  CDP_API_KEY_ID: "synthetic", CDP_API_KEY_SECRET: "synthetic", QUERY_PAYER_HMAC_KEY: "a".repeat(64),
   SUPABASE_URL: "https://synthetic.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_synthetic",
   SUPABASE_READER_JWT: token(),

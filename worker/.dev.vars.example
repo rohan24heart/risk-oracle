@@ -1,4 +1,12 @@
-﻿# Local placeholders only. Keep actual values in ignored .dev.vars or Worker secrets.
+# Local placeholders only. Keep actual values in ignored .dev.vars or Worker secrets.
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_READER_JWT=
+
+# Public receiver and production facilitator configuration (no private wallet key).
+X402_PAY_TO=
+X402_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402
+# Worker secrets; provision from CDP and a random 32-byte HMAC key respectively.
+CDP_API_KEY_ID=
+CDP_API_KEY_SECRET=
+QUERY_PAYER_HMAC_KEY=
