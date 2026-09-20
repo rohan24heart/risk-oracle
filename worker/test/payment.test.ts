@@ -2,6 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import type { PaymentRequirements } from "@x402/core/types";
+import { validateDiscoveryExtension } from "@x402/extensions/bazaar";
 import worker from "../src/index";
 import { USDC, type Assessment } from "../src/contracts";
 import { DATABASE_PATH } from "../src/supabase";
@@ -121,6 +122,16 @@ describe("x402 paid risk queries in workerd", () => {
     const challenge = decodePaymentRequiredHeader(response.headers.get("PAYMENT-REQUIRED")!);
     expect(challenge.x402Version).toBe(2);
     expect(challenge.accepts).toEqual([terms]);
+    expect(challenge.extensions).toBeDefined();
+    const bazaarExtension = challenge.extensions!.bazaar as Parameters<typeof validateDiscoveryExtension>[0];
+    expect(validateDiscoveryExtension(bazaarExtension).valid).toBe(true);
+    const bazaar = bazaarExtension as { info?: {
+      input?: { type?: string; method?: string; bodyType?: string; body?: unknown };
+      output?: { type?: string; example?: unknown };
+    } };
+    expect(bazaar.info?.input).toMatchObject({ type: "http", method: "POST", bodyType: "json", body: subject });
+    expect(bazaar.info?.output).toMatchObject({ type: "json" });
+    expect(bazaar.info?.output?.example).toBeDefined();
     expect(await response.json()).toEqual(challenge);
     expect(calls("/verify")).toHaveLength(0); expect(calls("/settle")).toHaveLength(0);
     expect(calls(QUERY_EVENT_PATH)).toHaveLength(0);
@@ -165,7 +176,15 @@ describe("x402 paid risk queries in workerd", () => {
   it("does not return risk or log after failed settlement", async () => {
     settleResult = { success: false, transaction: "", network: "eip155:8453", errorMessage: "PRIVATE_PROVIDER_ERROR" };
     const response = await run(); expect(response.status).toBe(402);
-    expect(await response.text()).not.toContain('"score"'); expect(calls(QUERY_EVENT_PATH)).toHaveLength(0);
+    const challenge = decodePaymentRequiredHeader(response.headers.get("PAYMENT-REQUIRED")!);
+    const body = await response.json();
+    expect(body).toEqual(challenge);
+    // Bazaar documents a static example, but must not expose the live assessment.
+    const serialized = JSON.stringify(body);
+    expect(serialized).not.toContain(`"score":${data.score}`);
+    expect(serialized).not.toContain(data.block_number!);
+    expect(serialized).not.toContain(data.calculated_at!);
+    expect(calls(QUERY_EVENT_PATH)).toHaveLength(0);
   });
   it.each(["/supported", "/verify", "/settle"])("sanitizes facilitator HTTP failure at %s", async path => {
     failingPath = "/platform/v2/x402" + path; upstreamStatus = 503;
